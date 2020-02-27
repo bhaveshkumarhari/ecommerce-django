@@ -48,6 +48,8 @@ def add_to_cart(request, slug):
         messages.info(request, "This item was added to your cart.")
         return redirect("core:product",slug=slug)
 
+    #return redirect("core:product",slug=slug)
+
 
 def remove_from_cart(request, slug):
     item = get_object_or_404(Item, slug=slug) # get specific item with slug
