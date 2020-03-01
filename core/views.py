@@ -6,10 +6,25 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
+from .forms import CheckoutForm
 from .models import Item, OrderItem, Order
 
-def checkout(request):
-    return render(request, 'checkout-page.html')
+class CheckoutView(View):
+    def get(self, *args, **kwargs):
+        #form
+        form = CheckoutForm()
+        context = {
+            'form': form
+        }
+        return render(self.request, 'checkout-page.html', context)
+
+    def post(self, *args, **kwargs):
+        form = CheckoutForm(self.request.POST or None)
+        #print(self.request.POST)
+        if form.is_valid():
+            return redirect('core:checkout')
+        messages.warning(self.request, "Failed checkout")
+        return redirect('core:checkout')
 
 class HomeView(ListView):
     model = Item
@@ -27,6 +42,7 @@ class OrderSummaryView(LoginRequiredMixin, View):
                 'object':order
             }
             return render(self.request, 'order_summary.html', context)
+            
         except ObjectDoesNotExist:
             # if there is no active order then shows message
             messages.error(self.request, "You do not have active order")
