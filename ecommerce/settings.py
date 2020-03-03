@@ -136,6 +136,11 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 # DEBUG TOOLBAR SETTINGS
 
 DEBUG_TOOLBAR_PANELS = [
@@ -181,4 +186,6 @@ LOGIN_REDIRECT_URL = '/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
+
+STRIPE_PUBLIC_KEY = ''
 STRIPE_SECRET_KEY = ''
