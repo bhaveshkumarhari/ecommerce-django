@@ -9,10 +9,34 @@ from django.shortcuts import redirect
 from django.utils import timezone
 from .forms import CheckoutForm
 from .models import Item, OrderItem, Order, BillingAddress, Payment
+from django.contrib.auth.models import User
 
 import stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
+def Dashboard(request):
+    orders = Order.objects.all() # Get all the orders
+    total_orders = orders.filter(ordered=True).count() # Count total successful orders
+   
+    items = Item.objects.all() # Get all the items
+    total_items = items.count() # Count total items
+
+    users = User.objects.all() # Get all the users
+    total_users = users.count() # Count total users
+
+    # Get revenue by totalling all payment amounts
+    payments = Payment.objects.all()
+    revenue = 0
+    for amounts in payments:
+        revenue += amounts.amount
+
+    # Filter all the orders which are successfully completed
+    order_qs = Order.objects.filter(ordered=True)
+            
+    context = {'total_orders':total_orders, 'total_items':total_items, 'revenue':revenue, 
+                'total_users':total_users, 'orders':orders, 'order_qs':order_qs}
+
+    return render(request, 'dashboard.html',context)
 
 class CheckoutView(View):
     def get(self, *args, **kwargs):
@@ -95,6 +119,12 @@ class PaymentView(View):
             payment.user = self.request.user
             payment.amount = order.get_total()
             payment.save()
+
+            
+            order_items = order.items.all()
+            order_items.update(ordered=True)
+            for item in order_items:
+                item.save()
 
             # Assign the payment to the order
 
