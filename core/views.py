@@ -10,9 +10,15 @@ from django.utils import timezone
 from .forms import CheckoutForm, CouponForm
 from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon
 from django.contrib.auth.models import User
+from .filters import ItemFilter, OrderFilter
 
+import random
+import string
 import stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def create_ref_code():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 def Dashboard(request):
     orders = Order.objects.all() # Get all the orders
@@ -32,9 +38,15 @@ def Dashboard(request):
 
     # Filter all the orders which are successfully completed
     order_qs = Order.objects.filter(ordered=True)
+
+    myFilter = OrderFilter(request.GET, queryset=order_qs)
+    order_qs = myFilter.qs
+
+    # itemFilter = ItemFilter(request.GET, queryset=order_qs)
+    # order_qs = itemFilter.qs
             
     context = {'total_orders':total_orders, 'total_items':total_items, 'revenue':revenue, 
-                'total_users':total_users, 'orders':orders, 'order_qs':order_qs}
+                'total_users':total_users, 'orders':orders, 'order_qs':order_qs, 'myFilter':myFilter}
 
     return render(request, 'dashboard.html',context)
 
@@ -117,7 +129,7 @@ class PaymentView(View):
         order = Order.objects.get(user=self.request.user, ordered=False)
         token = self.request.POST.get('stripeToken') # get from stripeTokenHandler in payment.html
         amount = int(order.get_total() * 100)
-
+        
 
         try:
             charge = stripe.Charge.create(
@@ -144,6 +156,7 @@ class PaymentView(View):
 
             order.ordered = True # When order is completed
             order.payment = payment
+            order.ref_code = create_ref_code()
             order.save()
 
             messages.success(self.request, "Your order was successful")
