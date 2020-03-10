@@ -17,6 +17,7 @@
         <span class="text-muted">£{{ order_item.get_final_price }}</span>
         </li>
         {% endfor %}
+        <!-- If there is coupon, display promo code info-->
         {% if order.coupon %}
         <li class="list-group-item d-flex justify-content-between bg-light">
         <div class="text-success">

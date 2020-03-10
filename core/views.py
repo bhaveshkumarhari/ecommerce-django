@@ -7,14 +7,16 @@ from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
-from .forms import CheckoutForm, CouponForm
-from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon
+from .forms import CheckoutForm, CouponForm, RefundForm, StatusForm
+from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon, Refund
 from django.contrib.auth.models import User
 from .filters import ItemFilter, OrderFilter
 
 import random
 import string
+
 import stripe
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def create_ref_code():
@@ -41,6 +43,30 @@ def Dashboard(request):
 
     myFilter = OrderFilter(request.GET, queryset=order_qs)
     order_qs = myFilter.qs
+
+    refund_granted = Order.objects.filter(ordered=True, refund_granted=True)
+    for setorder in refund_granted:
+        setorder.status = "Refund Granted"
+        setorder.label = "primary"
+        setorder.save()
+
+    refund_requested = Order.objects.filter(ordered=True, refund_requested=True)
+    for setorder in refund_requested:
+        setorder.status = "Refund Requested"
+        setorder.label = "danger"
+        setorder.save()
+
+    received = Order.objects.filter(ordered=True, received=True)
+    for setorder in received:
+        setorder.status = "Delivered"
+        setorder.label = "complete"
+        setorder.save()
+    
+    being_delivered = Order.objects.filter(ordered=True, being_delivered=True)
+    for setorder in being_delivered:
+        setorder.status = "Being Delivered"
+        setorder.label = "secondary"
+        setorder.save()
 
     # itemFilter = ItemFilter(request.GET, queryset=order_qs)
     # order_qs = itemFilter.qs
@@ -358,4 +384,59 @@ class AddCouponView(View):
                 messages.info(self.request, "You do not have an active order")
                 return redirect("core:checkout")
 
+class RequestRefundView(View):
+    def get(self, *args, **kwargs):
+        form = RefundForm()
+        context = {
+            'form':form
+        }
+        return render(self.request, 'refund_request.html', context)
+
+    def post(self, *args, **kwargs):
+        form = RefundForm(self.request.POST)
+        if form.is_valid():
+            ref_code = form.cleaned_data.get('ref_code')
+            message = form.cleaned_data.get('message')
+            email = form.cleaned_data.get('email')
+
+            # Edit the order
+            try:
+                order = Order.objects.get(ref_code=ref_code)
+                order.refund_requested = True
+                order.save()
+
+                # Store the refund
+                refund = Refund()
+                refund.order = order
+                refund.reason = message
+                refund.email = email
+                refund.save()
+
+                messages.info(self.request, "Your request was received.")
+                return redirect("core:request-refund")
+
+            except ObjectDoesNotExist:
+                messages.info(self.request, "This order does not exist.")
+                return redirect("core:request-refund")
+
+
+def UpdateStatusView(request, ref_code):
+    order = Order.objects.get(ref_code=ref_code)
+    form = StatusForm()
+
+    context = {
+        'form':form,
+        'order':order
+    }
+    return render(request, 'update_status.html', context)
+
+# class UpdateStatusView(View):
+#     def get(self, *args, **kwargs):
+#         order = Order.objects.get(ref_code=ref_code)
+#         form = StatusForm()
+#         context = {
+#             'form':form,
+#             'order':order
+#         }
+#         return render(self.request, 'update_status.html', context)
 

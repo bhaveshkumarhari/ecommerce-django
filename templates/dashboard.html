@@ -398,7 +398,7 @@
                                                     <td> <span class="">{{ order_item.item.title }}</span> </td>
                                                     <td><span class="">{{ order_item.quantity }}</span></td>
                                                     <td>
-                                                        <span class="badge badge-complete">{{ order_item.ordered }}</span>
+                                                        <a href="{{ order.get_update_status_url }}"><span class="badge badge-{{ order.label }}">{{ order.status }}</span></a>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}

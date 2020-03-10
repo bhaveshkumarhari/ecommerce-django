@@ -34,3 +34,17 @@ class CouponForm(forms.Form):
         'aria-label' : 'Recipient\'s username',
         'aria-describedby' : 'basic-addon2'
     }))
+
+class RefundForm(forms.Form):
+    ref_code = forms.CharField()
+    message = forms.CharField(widget=forms.Textarea(attrs={
+        'rows': 4
+    }))
+    email = forms.EmailField()
+
+class StatusForm(forms.Form):
+    being_delivered = forms.BooleanField(required=False)
+    received = forms.BooleanField(required=False)
+    refund_requested = forms.BooleanField(required=False)
+    refund_granted = forms.BooleanField(required=False)
+    
