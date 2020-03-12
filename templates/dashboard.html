@@ -75,7 +75,7 @@
             <div id="main-menu" class="main-menu collapse navbar-collapse">
                 <ul class="nav navbar-nav">
                     <li class="active">
-                        <a href="index.html"><i class="menu-icon fa fa-laptop"></i>Dashboard </a>
+                        <a href="{% url 'core:dashboard' %}"><i class="menu-icon fa fa-laptop"></i>Dashboard </a>
                     </li>
                     <li class="menu-title">UI elements</li><!-- /.menu-title -->
                     <li class="menu-item-has-children dropdown">
@@ -259,6 +259,20 @@
         <!-- /#header -->
         <!-- Content -->
         <div class="content">
+
+          
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+
             <!-- Animated -->
             <div class="animated fadeIn">
                 <!-- Widgets  -->
@@ -288,7 +302,7 @@
                                     <div class="stat-icon dib flat-color-2">
                                         <i class="pe-7s-cart"></i>
                                     </div>
-                                    <div class="stat-content">
+                                    <div class="stat-content">   
                                         <div class="text-left dib">
                                             <div class="stat-text"><span class="count">{{ total_orders }}</span></div>
                                             <div class="stat-heading">Orders</div>
@@ -301,6 +315,7 @@
 
                     <div class="col-lg-3 col-md-6">
                         <div class="card">
+                            <a href="{% url 'core:products' %}">
                             <div class="card-body">
                                 <div class="stat-widget-five">
                                     <div class="stat-icon dib flat-color-3">
@@ -314,6 +329,7 @@
                                     </div>
                                 </div>
                             </div>
+                            </a>
                         </div>
                     </div>
 

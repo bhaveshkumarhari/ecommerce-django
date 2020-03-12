@@ -422,7 +422,15 @@ class RequestRefundView(View):
 
 def UpdateStatusView(request, ref_code):
     order = Order.objects.get(ref_code=ref_code)
-    form = StatusForm()
+    form = StatusForm(instance=order)
+    
+    # Update specific order instances.
+    if request.method == 'POST':
+        form = StatusForm(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            messages.info(request, "Updated order status successfully.")
+            return redirect('core:dashboard')
 
     context = {
         'form':form,
@@ -430,13 +438,12 @@ def UpdateStatusView(request, ref_code):
     }
     return render(request, 'update_status.html', context)
 
-# class UpdateStatusView(View):
-#     def get(self, *args, **kwargs):
-#         order = Order.objects.get(ref_code=ref_code)
-#         form = StatusForm()
-#         context = {
-#             'form':form,
-#             'order':order
-#         }
-#         return render(self.request, 'update_status.html', context)
+
+class ProductListView(View):
+    def get(self, *args, **kwargs):
+        items = Item.objects.all()
+        context = {
+            'items':items
+        }
+        return render(self.request, 'products.html', context)
 

@@ -2,6 +2,9 @@ from django import forms
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
 
+from django.forms import ModelForm
+from .models import Order
+
 PAYMENT_CHOICES = (
     ('S', 'Stripe'),
     ('P', 'Paypal')
@@ -42,9 +45,9 @@ class RefundForm(forms.Form):
     }))
     email = forms.EmailField()
 
-class StatusForm(forms.Form):
-    being_delivered = forms.BooleanField(required=False)
-    received = forms.BooleanField(required=False)
-    refund_requested = forms.BooleanField(required=False)
-    refund_granted = forms.BooleanField(required=False)
+class StatusForm(ModelForm):
+    class Meta:
+        model = Order
+        fields = ['being_delivered', 'received' ,'refund_requested' ,'refund_granted']
+
     
