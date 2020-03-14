@@ -13,6 +13,8 @@ from django.contrib.auth.models import User
 from .filters import ItemFilter, OrderFilter
 from django.contrib.auth import authenticate, login, logout
 
+from .decorators import allowed_users, unauthenticated_user, admin_only
+
 import random
 import string
 
@@ -24,6 +26,7 @@ def create_ref_code():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=20))
 
 @login_required(login_url='core:dashboard-login')
+@admin_only
 def Dashboard(request):
     orders = Order.objects.all() # Get all the orders
     total_orders = orders.filter(ordered=True).count() # Count total successful orders
@@ -422,6 +425,7 @@ class RequestRefundView(View):
                 return redirect("core:request-refund")
 
 @login_required(login_url='core:dashboard-login')
+@admin_only
 def UpdateStatusView(request, ref_code):
     order = Order.objects.get(ref_code=ref_code)
     form = StatusForm(instance=order)
@@ -440,7 +444,7 @@ def UpdateStatusView(request, ref_code):
     }
     return render(request, 'update_status.html', context)
 
-
+#TODO: Decorator for permission
 class ProductListView(LoginRequiredMixin, View):
     login_url = 'core:dashboard-login'
     def get(self, *args, **kwargs):
@@ -451,6 +455,7 @@ class ProductListView(LoginRequiredMixin, View):
         return render(self.request, 'products_list.html', context)
 
 @login_required(login_url='core:dashboard-login')
+@admin_only
 def UpdateItemView(request):
     item = Item.objects.get(quantity=3)
     form = ItemForm(instance=item)
@@ -469,45 +474,51 @@ def UpdateItemView(request):
     }
     return render(request, 'update_item.html', context)
 
+@unauthenticated_user
 def DashboardRegister(request):
-    if request.user.is_authenticated:
-        return redirect('core:dashboard')
-    else:
-        form = CreateUserForm()
-        if request.method == 'POST':
-            form = CreateUserForm(request.POST)
-            if form.is_valid():
-                form.save()
-                user = form.cleaned_data.get('username')
-                messages.success(request,'Account was created for ' + user)
-                return redirect('core:dashboard-login')
-        context = {
-            'form':form
-        }
-        return render(request, 'dashboard_register.html', context)
+    # if request.user.is_authenticated:
+    #     return redirect('core:dashboard')
+    # else:
+    form = CreateUserForm()
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            user = form.cleaned_data.get('username')
+            messages.success(request,'Account was created for ' + user)
+            return redirect('core:dashboard-login')
+    context = {
+        'form':form
+    }
+    return render(request, 'dashboard_register.html', context)
 
 
+@unauthenticated_user
 def DashboardLogin(request):
-    if request.user.is_authenticated:
-        return redirect('core:dashboard')
-    else:
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            user = authenticate(request, username=username, password=password)
+    # if request.user.is_authenticated:
+    #     return redirect('core:dashboard')
+    # else:
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
 
-            if user is not None:
-                login(request, user)
-                return redirect('core:dashboard')
-            else:
-                messages.info(request, 'Username OR password is incorrect')
+        if user is not None:
+            login(request, user)
+            return redirect('core:dashboard')
+        else:
+            messages.info(request, 'Username OR password is incorrect')
 
-        context = {}
-        return render(request, 'dashboard_login.html', context)
+    context = {}
+    return render(request, 'dashboard_login.html', context)
 
 
 def DashboardLogout(request):
     logout(request)
     return redirect('core:dashboard-login')
+
+
+def DashboardUser(request):
+    return render(request, 'dashboard_user.html')
 
 

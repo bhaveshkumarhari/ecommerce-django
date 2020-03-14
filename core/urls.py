@@ -16,7 +16,8 @@ from .views import (
     UpdateItemView,
     DashboardRegister,
     DashboardLogin,
-    DashboardLogout
+    DashboardLogout,
+    DashboardUser
 )
 
 app_name = 'core'
@@ -30,6 +31,7 @@ urlpatterns = [
     path('dashboard/register/', DashboardRegister, name='dashboard-register'),
     path('dashboard/login/', DashboardLogin, name='dashboard-login'),
     path('dashboard/logout/', DashboardLogout, name='dashboard-logout'),
+    path('dashboard/user/', DashboardUser, name='dashboard-user'),
     path('checkout/', CheckoutView.as_view(), name="checkout"),
     path('order-summary/', OrderSummaryView.as_view(), name="order-summary"),
     path('product/<slug>/', ItemDetailView.as_view(), name="product"),
