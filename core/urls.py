@@ -12,7 +12,10 @@ from .views import (
     AddCouponView,
     RequestRefundView,
     UpdateStatusView,
-    ProductListView
+    ProductListView,
+    UpdateItemView,
+    DashboardRegister,
+    DashboardLogin
 )
 
 app_name = 'core'
@@ -21,7 +24,10 @@ urlpatterns = [
     path('', HomeView.as_view(), name="home"),
     path('dashboard/', Dashboard, name="dashboard"),
     path('dashboard/update-status/<ref_code>/', UpdateStatusView, name='update-status'),
-    path('dashboard/products/', ProductListView.as_view(), name='products'),
+    path('dashboard/products-list/', ProductListView.as_view(), name='products-list'),
+    path('dashboard/update-item/', UpdateItemView, name='update-item'),
+    path('dashboard/register/', DashboardRegister, name='dashboard-register'),
+    path('dashboard/login/', DashboardLogin, name='dashboard-login'),
     path('checkout/', CheckoutView.as_view(), name="checkout"),
     path('order-summary/', OrderSummaryView.as_view(), name="order-summary"),
     path('product/<slug>/', ItemDetailView.as_view(), name="product"),

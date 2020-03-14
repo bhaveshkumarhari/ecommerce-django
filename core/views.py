@@ -1,16 +1,17 @@
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.shortcuts import redirect
 from django.utils import timezone
-from .forms import CheckoutForm, CouponForm, RefundForm, StatusForm
+from .forms import CheckoutForm, CouponForm, RefundForm, StatusForm, ItemForm, CreateUserForm
 from .models import Item, OrderItem, Order, BillingAddress, Payment, Coupon, Refund
 from django.contrib.auth.models import User
 from .filters import ItemFilter, OrderFilter
+from django.contrib.auth import authenticate, login, logout
 
 import random
 import string
@@ -76,7 +77,7 @@ def Dashboard(request):
 
     return render(request, 'dashboard.html',context)
 
-class CheckoutView(View):
+class CheckoutView(LoginRequiredMixin, View):
     def get(self, *args, **kwargs):
         try:
             order = Order.objects.get(user=self.request.user, ordered=False)
@@ -445,5 +446,59 @@ class ProductListView(View):
         context = {
             'items':items
         }
-        return render(self.request, 'products.html', context)
+        return render(self.request, 'products_list.html', context)
+
+
+def UpdateItemView(request):
+    item = Item.objects.get(quantity=3)
+    form = ItemForm(instance=item)
+    
+    # Update specific item instances.
+    if request.method == 'POST':
+        form = ItemForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            messages.info(request, "Updated product details successfully.")
+            return redirect('core:dashboard')
+
+    context = {
+        'form':form,
+        'item':item
+    }
+    return render(request, 'update_item.html', context)
+
+def DashboardRegister(request):
+    form = CreateUserForm()
+    if request.method == 'POST':
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            form.save()
+            user = form.cleaned_data.get('username')
+            messages.success(request,'Account was created for ' + user)
+            return redirect('core:dashboard-login')
+    context = {
+        'form':form
+    }
+    return render(request, 'dashboard_register.html', context)
+
+
+def DashboardLogin(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('core:dashboard')
+        else:
+            messages.info(request, 'Username OR password is incorrect')
+
+    context = {}
+    return render(request, 'dashboard_login.html', context)
+
+
+def logoutUser(request):
+    logout(request)
+    return redirect('core:dashboard-login')
 
