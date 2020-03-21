@@ -50,6 +50,12 @@ def Dashboard(request):
     myFilter = OrderFilter(request.GET, queryset=order_qs)
     order_qs = myFilter.qs
 
+    ordered = Order.objects.filter(ordered=True, refund_granted=False, refund_requested=False, received=False, being_delivered=False)
+    for setorder in ordered:
+        setorder.status = "Ordered"
+        setorder.label = "danger"
+        setorder.save()
+
     refund_granted = Order.objects.filter(ordered=True, refund_granted=True)
     for setorder in refund_granted:
         setorder.status = "Refund Granted"
@@ -295,15 +301,22 @@ class PaymentView(View):
         order = Order.objects.get(user=self.request.user, ordered=False)
         token = self.request.POST.get('stripeToken') # get from stripeTokenHandler in payment.html
         amount = int(order.get_total() * 100)
-        
 
         try:
-            charge = stripe.Charge.create(
-                amount = amount,
-                currency = "usd",
-                source = "token",
+
+            customer = stripe.Customer.create(
+                # email = "bhavesh@gmail.com",
+                name = self.request.user,
+                source = token
             )
 
+            charge = stripe.Charge.create(
+                customer = customer,
+                amount = amount,
+                currency = "gbp",
+                description = "Payment"       
+            )
+            
             # Create the payment
             payment = Payment()
             # Assign the values to Payment model fields
