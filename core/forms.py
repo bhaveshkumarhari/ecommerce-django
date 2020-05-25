@@ -58,6 +58,11 @@ class RefundForm(forms.Form):
     }))
     email = forms.EmailField()
 
+class PaymentForm(forms.Form):
+    stripeToken = forms.CharField(required=False)
+    save = forms.BooleanField(required=False)
+    use_default = forms.BooleanField(required=False)
+    
 class StatusForm(ModelForm):
     class Meta:
         model = Order
