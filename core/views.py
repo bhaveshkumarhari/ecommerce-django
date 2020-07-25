@@ -143,7 +143,7 @@ class CheckoutView(LoginRequiredMixin, View):
             #print(self.request.POST) # printing the POST data to terminal
             if form.is_valid():
 
-                # Get the cleaned data from the form.
+#---------------------------- FOR SHIPPING ADDRESS ----------------------------------------
 
                 #------- If checkbox selected to use default shipping address --------
                 use_default_shipping = form.cleaned_data.get('use_default_shipping')
@@ -242,7 +242,7 @@ class CheckoutView(LoginRequiredMixin, View):
                     
                     if is_valid_form([billing_address1, billing_country, billing_zip]):
                         # Assign the data to Address model fields
-                        shipping_address = Address(
+                        billing_address = Address(
                             user = self.request.user,
                             street_address = billing_address1,
                             apartment_address = billing_address2,
@@ -555,8 +555,9 @@ def get_coupon(request, code):
         return coupon # Return code
 
     except ObjectDoesNotExist:
-        messages.info(request, "This coupon does not exist")
-        return redirect("core:checkout")
+        pass
+        # messages.info(request, "This coupon does not exist")
+        # return redirect("core:checkout")
 
 class AddCouponView(View):
     def post(self, *args, **kwargs):
@@ -566,10 +567,15 @@ class AddCouponView(View):
                 code = form.cleaned_data.get('code') # Get the cleaned coupon code from form
                 order = Order.objects.get(user=self.request.user, ordered=False)
                 # Go to function and check if coupon exists? Yes. Add the coupon code to Order model field(coupon)
-                order.coupon = get_coupon(self.request, code)
-                order.save() # Save the order instance
-                messages.success(self.request, "Successfully added coupon")
-                return redirect("core:checkout")
+                got_coupon = get_coupon(self.request, code)
+                if got_coupon != None:
+                    order.coupon = got_coupon
+                    order.save() # Save the order instance
+                    messages.success(self.request, "Successfully added coupon")
+                    return redirect("core:checkout")
+                else:
+                    messages.info(self.request, "This coupon does not exist")
+                    return redirect("core:checkout")
 
             except ObjectDoesNotExist:
                 messages.info(self.request, "You do not have an active order")
